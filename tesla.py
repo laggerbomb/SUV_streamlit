@@ -3,13 +3,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.feature_selection import SelectKBest, chi2
 
 # Set the page title
-st.title("Tesla Data Analysis")
+st.title("SUV Data Analysis")
 
 # Load the CSV file
 csv_file = "suv_data.csv"
@@ -22,7 +23,7 @@ cleanDataset = st.session_state   # Store the cleaned DataFrame in session state
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
-options = ["EDA", "SVM Prediction", "KNN Prediction"]
+options = ["EDA", "Naive Bayes Prediction", "KNN Prediction"]
 selected_option = st.sidebar.radio("Go to", options)
 
 # EDA (Exploratory Data Analysis)
@@ -134,10 +135,10 @@ if selected_option == "EDA":
         # Display the plot
         st.pyplot(fig)
 
-# SVM Prediction
-elif selected_option == "SVM Prediction":
+# Naive Bayes Prediction
+elif selected_option == "Naive Bayes Prediction":
     
-    st.subheader("SVM Prediction")
+    st.subheader("Naive Bayes Prediction")
 
     if 'df_cleaned' in cleanDataset:
         #assign the varaible form session
@@ -152,7 +153,7 @@ elif selected_option == "SVM Prediction":
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
         st.markdown("***")
-        st.title("Algo 1 - SVM (Poly) Model Evaluation")
+        st.title("Algo 1 - Naive Bayes Evaluation")
 
         # Normalize the feature matrix
         scaler = MinMaxScaler()
@@ -160,11 +161,11 @@ elif selected_option == "SVM Prediction":
         X_test = scaler.transform(X_test)
 
         # Create and train the SVM model with the polynomial kernel
-        svm_model = SVC(kernel='poly')
-        svm_model.fit(X_train, y_train)
+        naive_bayes_model = GaussianNB()
+        naive_bayes_model.fit(X_train, y_train)
 
         # Predict the target variable for the test set
-        y_pred = svm_model.predict(X_test)
+        y_pred = naive_bayes_model.predict(X_test)
 
         # Calculate evaluation metrics
         confusion = confusion_matrix(y_test, y_pred)
@@ -202,7 +203,7 @@ elif selected_option == "SVM Prediction":
         gender = int(selected_gender_label == "Male")
 
         # Age
-        age = st.slider("Age", 0, 60)
+        age = st.slider("Age", 17, 60)
 
         # Estimated Salary
         salary = st.slider("Estimated Salary", 0, 150000)
@@ -213,17 +214,16 @@ elif selected_option == "SVM Prediction":
         prediction_labels = {0: "Not Purchased", 1: "Purchased"}
 
         # Make prediction
-        prediction = svm_model.predict(input_data)
+        prediction = naive_bayes_model.predict(input_data)
         predicted_label = prediction_labels[prediction[0]]
 
         # Display the prediction
         st.write("Prediction:", predicted_label)
 
-        # Estimate prediction probabilities using Platt scaling
-        decisions = svm_model.decision_function(input_data)
-        probabilities = (1 / (1 + np.exp(-decisions)))
-        purchased_probability = probabilities[0]
-        not_purchased_probability = 1 - purchased_probability
+        # Estimate prediction probabilities
+        probabilities = naive_bayes_model.predict_proba(input_data)
+        purchased_probability = probabilities[0][1]
+        not_purchased_probability = 1 - purchased_probability #AKA probabilities[0][0]
 
         # Display prediction probabilities table
         st.subheader("Prediction Probabilities")
@@ -234,6 +234,25 @@ elif selected_option == "SVM Prediction":
             }
         )
         st.write(probabilities_data)
+
+        # Feature Selection
+        st.markdown("***")
+        st.subheader("Important Feature ")
+
+        # Use KBest
+        selector = SelectKBest(score_func=chi2, k='all') 
+        X_new = selector.fit_transform(X, y)
+
+        # Get the selected feature scores
+        feature_scores = selector.scores_
+
+        # Calculate the importance percentage for each feature
+        total_score = sum(feature_scores)
+        feature_importances = [(score / total_score) * 100 for score in feature_scores]
+
+        # Create a DataFrame to display the features and their importance percentages
+        features_df = pd.DataFrame({"Feature": X.columns, "Percentage": feature_importances})
+        st.dataframe(features_df)
 
     else:
         st.warning("Please perform EDA and remove missing values before running the Algorithm section.")
@@ -306,7 +325,7 @@ elif selected_option == "KNN Prediction":
         gender = int(selected_gender_label == "Male")
 
         # Age
-        age = st.slider("Age", 0, 60)
+        age = st.slider("Age", 18, 60)
 
         # Estimated Salary
         salary = st.slider("Estimated Salary", 0, 150000)
@@ -337,5 +356,25 @@ elif selected_option == "KNN Prediction":
             }
         )
         st.write(probabilities_data)
+
+        # Feature Selection
+        st.markdown("***")
+        st.subheader("Important Feature ")
+
+        # Use KBest
+        selector = SelectKBest(score_func=chi2, k='all') 
+        X_new = selector.fit_transform(X, y)
+
+        # Get the selected feature scores
+        feature_scores = selector.scores_
+
+        # Calculate the importance percentage for each feature
+        total_score = sum(feature_scores)
+        feature_importances = [(score / total_score) * 100 for score in feature_scores]
+
+        # Create a DataFrame to display the features and their importance percentages
+        features_df = pd.DataFrame({"Feature": X.columns, "Percentage": feature_importances})
+        st.dataframe(features_df)
+
     else:
         st.warning("Please perform EDA and remove missing values before running the Algorithm section.")
