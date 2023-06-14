@@ -10,7 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.feature_selection import SelectKBest, chi2
 
 # Set the page title
-st.title("SUV Data Analysis")
+st.title("SUV Predict")
 
 # Load the CSV file
 csv_file = "suv_data.csv"
