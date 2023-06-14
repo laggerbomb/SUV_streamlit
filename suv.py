@@ -30,18 +30,14 @@ selected_option = st.sidebar.radio("Go to", options)
 if selected_option == "EDA":
     st.subheader("Exploratory Data Analysis")
 
-    # Get the list of columns in the dataset
-    columns = df.columns.tolist()
+    # Display the complete dataset
+    st.write("Complete Dataset",df)
 
-    # Create a multiselect widget to allow the user to choose columns to remove
-    columns_to_remove = st.multiselect("Select columns to remove", columns)
-
-    df_imputed = df.copy() # Create a copy of the original DataFrame
-    # Remove the selected columns from the dataset
-    df_imputed = df.drop(columns=columns_to_remove)
+    # Remove the "User ID" column from the dataset
+    df_imputed = df.drop(columns=["User ID"])
 
     # Display the filtered dataset
-    st.write("Filtered Dataset:", df_imputed)
+    st.write("Filtered Dataset (After drop User ID)", df_imputed)
     
     # Find lines with missing values
     missing_lines = df_imputed[df_imputed.isnull().any(axis=1)]
