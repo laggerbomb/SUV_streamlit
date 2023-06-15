@@ -1,5 +1,4 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -7,7 +6,6 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.feature_selection import SelectKBest, chi2
 
 # Set the page title
 st.title("SUV Predict")
@@ -156,7 +154,7 @@ elif selected_option == "Naive Bayes Prediction":
         X_train = scaler.fit_transform(X_train)
         X_test = scaler.transform(X_test)
 
-        # Create and train the SVM model with the polynomial kernel
+        # Create and train the Naive Bayes model
         naive_bayes_model = GaussianNB()
         naive_bayes_model.fit(X_train, y_train)
 
@@ -230,25 +228,6 @@ elif selected_option == "Naive Bayes Prediction":
             }
         )
         st.write(probabilities_data)
-
-        # Feature Selection
-        st.markdown("***")
-        st.subheader("Important Feature ")
-
-        # Use KBest
-        selector = SelectKBest(score_func=chi2, k='all') 
-        X_new = selector.fit_transform(X, y)
-
-        # Get the selected feature scores
-        feature_scores = selector.scores_
-
-        # Calculate the importance percentage for each feature
-        total_score = sum(feature_scores)
-        feature_importances = [(score / total_score) * 100 for score in feature_scores]
-
-        # Create a DataFrame to display the features and their importance percentages
-        features_df = pd.DataFrame({"Feature": X.columns, "Percentage": feature_importances})
-        st.dataframe(features_df)
 
     else:
         st.warning("Please perform EDA and remove missing values before running the Algorithm section.")
@@ -352,25 +331,6 @@ elif selected_option == "KNN Prediction":
             }
         )
         st.write(probabilities_data)
-
-        # Feature Selection
-        st.markdown("***")
-        st.subheader("Important Feature ")
-
-        # Use KBest
-        selector = SelectKBest(score_func=chi2, k='all') 
-        X_new = selector.fit_transform(X, y)
-
-        # Get the selected feature scores
-        feature_scores = selector.scores_
-
-        # Calculate the importance percentage for each feature
-        total_score = sum(feature_scores)
-        feature_importances = [(score / total_score) * 100 for score in feature_scores]
-
-        # Create a DataFrame to display the features and their importance percentages
-        features_df = pd.DataFrame({"Feature": X.columns, "Percentage": feature_importances})
-        st.dataframe(features_df)
 
     else:
         st.warning("Please perform EDA and remove missing values before running the Algorithm section.")
