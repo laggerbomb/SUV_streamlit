@@ -6,6 +6,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.feature_selection import SelectPercentile, f_classif
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
+import numpy as np
 
 # Set the page title
 st.title("SUV Predict")
@@ -229,6 +232,66 @@ elif selected_option == "Naive Bayes Prediction":
         )
         st.write(probabilities_data)
 
+        # Feature Selection
+        st.markdown("***")
+        st.subheader("Important Feature")
+
+        # Use SelectKBest with mutual information
+        selector = SelectKBest(score_func=mutual_info_classif, k='all')
+        X_new = selector.fit_transform(X, y)
+
+        # Get the selected feature scores
+        feature_scores = selector.scores_
+
+        # Calculate the importance percentage for each feature
+        total_score = sum(feature_scores)
+        feature_importances = [(score / total_score) * 100 for score in feature_scores]
+
+        # Create a DataFrame to display the features and their importance percentages
+        features_df = pd.DataFrame({"Feature": X.columns, "Percentage": feature_importances})
+        st.dataframe(features_df)
+
+        # Get the indices of the top-k important features
+        k = 2  # Select 2 most important features
+        top_k_indices = np.argsort(feature_scores)[-k:]
+
+        # Select the top-k important features from X
+        X_new_selected = X_new[:, top_k_indices]
+
+        # Split the selected features into train and test sets
+        X_train_selected, X_test_selected, y_train, y_test = train_test_split(X_new_selected, y, test_size=0.3, random_state=42)
+
+        # Create and train the Naive Bayes model using the selected features
+        naive_bayes_model_selected = GaussianNB()
+        naive_bayes_model_selected.fit(X_train_selected, y_train)
+
+        # Predict the target variable for the test set using the selected features
+        y_pred_selected = naive_bayes_model_selected.predict(X_test_selected)
+
+        # Calculate evaluation metrics for the selected features
+        confusion_selected = confusion_matrix(y_test, y_pred_selected)
+        precision_selected = precision_score(y_test, y_pred_selected)
+        recall_selected = recall_score(y_test, y_pred_selected)
+        f_score_selected = f1_score(y_test, y_pred_selected)
+        accuracy_selected = accuracy_score(y_test, y_pred_selected)
+
+        # Display new confusion matrix table
+        st.subheader("New Confusion Matrix Table")
+        st.write(pd.DataFrame(confusion_selected, index=['1 (Predicted)', '0 (Predicted)'], columns=['1 (Actual)', '0 (Actual)']))
+
+        # Display new confusion matrix value 
+        st.subheader("New Confusion Matrix Value")
+        tp_selected, fp_selected, fn_selected, tn_selected = confusion_selected.ravel()
+        st.write("TP:", tp_selected, "FP:", fp_selected)
+        st.write("FN:", fn_selected, "TN:", tn_selected)
+
+        # Display other evaluation metrics for the selected features
+        st.subheader("New Evaluation Metrics")
+        st.write(f"Precision: {precision_selected:.7f}")
+        st.write(f"Recall: {recall_selected:.7f}")
+        st.write(f"F1-Score: {f_score_selected:.7f}")
+        st.write(f"Accuracy: {accuracy_selected:.7f}")
+
     else:
         st.warning("Please perform EDA and remove missing values before running the Algorithm section.")
 
@@ -331,6 +394,66 @@ elif selected_option == "KNN Prediction":
             }
         )
         st.write(probabilities_data)
+
+        # Feature Selection
+        st.markdown("***")
+        st.subheader("Important Feature")
+
+        # Use Univariate Feature Selection
+        selector = SelectPercentile(score_func=f_classif, percentile=100)  # Adjust percentile as desired
+        X_new = selector.fit_transform(X, y)
+
+        # Get the selected feature scores
+        feature_scores = selector.scores_
+
+        # Calculate the importance percentage for each feature
+        total_score = sum(feature_scores)
+        feature_importances = [(score / total_score) * 100 for score in feature_scores]
+
+        # Create a DataFrame to display the features and their importance percentages
+        features_df = pd.DataFrame({"Feature": X.columns, "Percentage": feature_importances})
+        st.dataframe(features_df)
+
+        # Get the indices of the top-k important features
+        k = 2  # Select 2 most important features
+        top_k_indices = np.argsort(feature_scores)[-k:]
+
+        # Select the top-k important features from X
+        X_new_selected = X_new[:, top_k_indices]
+
+        # Split the selected features into train and test sets
+        X_train_selected, X_test_selected, y_train, y_test = train_test_split(X_new_selected, y, test_size=0.3, random_state=42)
+
+        # Create and train the KNN model
+        knn_model_selected = KNeighborsClassifier(n_neighbors=6)
+        knn_model_selected.fit(X_train_selected, y_train)
+
+        # Predict the target variable for the test set using the selected features
+        y_pred_selected = knn_model_selected.predict(X_test_selected)
+
+        # Calculate evaluation metrics for the selected features
+        confusion_selected = confusion_matrix(y_test, y_pred_selected)
+        precision_selected = precision_score(y_test, y_pred_selected)
+        recall_selected = recall_score(y_test, y_pred_selected)
+        f_score_selected = f1_score(y_test, y_pred_selected)
+        accuracy_selected = accuracy_score(y_test, y_pred_selected)
+
+        # Display new confusion matrix table
+        st.subheader("New Confusion Matrix Table")
+        st.write(pd.DataFrame(confusion_selected, index=['1 (Predicted)', '0 (Predicted)'], columns=['1 (Actual)', '0 (Actual)']))
+
+        # Display new confusion matrix value 
+        st.subheader("New Confusion Matrix Value")
+        tp_selected, fp_selected, fn_selected, tn_selected = confusion_selected.ravel()
+        st.write("TP:", tp_selected, "FP:", fp_selected)
+        st.write("FN:", fn_selected, "TN:", tn_selected)
+
+        # Display other evaluation metrics for the selected features
+        st.subheader("New Evaluation Metrics")
+        st.write(f"Precision: {precision_selected:.7f}")
+        st.write(f"Recall: {recall_selected:.7f}")
+        st.write(f"F1-Score: {f_score_selected:.7f}")
+        st.write(f"Accuracy: {accuracy_selected:.7f}")
 
     else:
         st.warning("Please perform EDA and remove missing values before running the Algorithm section.")
